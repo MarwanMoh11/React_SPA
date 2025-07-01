@@ -1,74 +1,69 @@
-# Project: Responsive Single-Page Application (SPA)
+# React + TypeScript + Vite
 
-## 1. Project Overview
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-This project entails the design, development, and deployment of a modern, responsive Single-Page Application. The primary objective is to build a feature-rich, user-friendly interface that performs efficiently across all devices, serving as a comprehensive demonstration of modern frontend development practices.
+Currently, two official plugins are available:
 
-## 2. Tech Stack
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-The application is built from the ground up using a contemporary tech stack:
+## Expanding the ESLint configuration
 
--   **Framework/Library:** [React](https://reactjs.org/)
--   **Build Tool:** [Vite](https://vitejs.dev/)
--   **Language:** [TypeScript](https://www.typescriptlang.org/)
--   **Styling:** [Tailwind CSS](https://tailwindcss.com/) & [Material-UI (MUI)](https://mui.com/)
--   **API & State Management:** [React Query](https://tanstack.com/query/v4/)
--   **Version Control:** [Git](https://git-scm.com/) & [GitHub](https://github.com)
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-## 3. Core Features and Requirements
+```js
+export default tseslint.config([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
--   **UI/UX:** The user interface is crafted using a combination of **Material-UI (MUI)** for its robust component library and **Tailwind CSS** for rapid, utility-first styling, resulting in a clean, responsive, and intuitive design.
+      // Remove tseslint.configs.recommended and replace with this
+      ...tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      ...tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      ...tseslint.configs.stylisticTypeChecked,
 
--   **Component Architecture:** The application is structured using **React functional components** and leverages **React Hooks** for state management and handling side effects, promoting a clean and maintainable codebase.
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
 
--   **API Integration & State Management:** Data fetching and state management for server-side data is handled efficiently using **React Query**. This includes implementing full **CRUD (Create, Read, Update, Delete)** functionality, ensuring the UI is always synchronized with the backend.
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
--   **Deployment and Documentation:** The final application will be deployed to a public-facing web service. The entire process, from setup to deployment, is thoroughly documented to provide a clear record of the development lifecycle and architectural decisions.
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
 
-## 4. Getting Started
-
-To get a local copy up and running, follow these simple steps.
-
-### Prerequisites
-
-Ensure you have Node.js and npm installed on your machine.
-* npm
-    ```sh
-    npm install npm@latest -g
-    ```
-
-### Installation
-
-1.  Clone the repo
-    ```sh
-    git clone [https://github.com/your-username/your-project-name.git](https://github.com/your-username/your-project-name.git)
-    ```
-2.  Navigate to the project directory
-    ```sh
-    cd your-project-name
-    ```
-3.  Install NPM packages
-    ```sh
-    npm install
-    ```
-
-## 5. Available Scripts
-
-In the project directory, you can run:
-
-### `npm run dev`
-
-Runs the app in the development mode.<br />
-Open [http://localhost:5173](http://localhost:5173) to view it in the browser.
-
-The page will reload if you make edits.<br />
-You will also see any lint errors in the console.
-
-### `npm run build`
-
-Builds the app for production to the `dist` folder.<br />
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-### `npm run preview`
-
-Runs a local server to preview the production build from the `dist` folder.
+export default tseslint.config([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
