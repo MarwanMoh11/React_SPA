@@ -1,49 +1,31 @@
-// src/components/Navbar.tsx
-
-import { AppBar, Toolbar, Typography, Button, Box, IconButton } from '@mui/material';
-import { Link } from 'react-router-dom';
-import FastfoodIcon from '@mui/icons-material/Fastfood';
-
-// 1. Import the hook from its new, dedicated file
-import { useTheme } from '../hooks/useTheme';
-
-// 2. Import icons for the theme toggle button
-import Brightness4Icon from '@mui/icons-material/Brightness4'; // Moon icon for dark mode
-import Brightness7Icon from '@mui/icons-material/Brightness7'; // Sun icon for light mode
+import { useContext } from 'react'
+import { AppBar, Toolbar, Typography, Button, Box, IconButton } from '@mui/material'
+import FastfoodIcon from '@mui/icons-material/Fastfood'
+import Brightness4Icon from '@mui/icons-material/Brightness4'
+import Brightness7Icon from '@mui/icons-material/Brightness7'
+import { Link } from 'react-router-dom'
+import { ThemeContext } from '../contexts/ThemeContext';
 
 export const Navbar = () => {
-    // 3. Use the hook to get the current theme and the function to toggle it
-    const { theme, toggleTheme } = useTheme();
-    console.log("Current theme in Navbar:", theme);
-
+    const { mode, toggleColorMode } = useContext(ThemeContext)
     return (
-        <AppBar position="static" sx={{ backgroundColor: '#2e7d32' }}>
+        <AppBar position="static" elevation={1} sx={{ bgcolor: 'background.paper' }}>
             <Toolbar>
-                <FastfoodIcon sx={{ mr: 2 }} />
-                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                    <Link to="/tailwind" style={{ textDecoration: 'none', color: 'inherit' }}>
-                        Healthy Recipes
+                <FastfoodIcon sx={{ color: 'primary.main', mr: 2 }} />
+                <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                    <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+                        Healthy App
                     </Link>
                 </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Button color="inherit" component={Link} to="/tailwind">
-
-                        Tailwind Page
-                    </Button>
-                    <Button color="inherit" component={Link} to="/mui">
-                        MUI Page
-                    </Button>
-                    <Button color="inherit" component={Link} to="/dashboard">
-                        Dashboard
-                    </Button>
-
-                    {/* 4. The theme toggle button */}
-                    <IconButton sx={{ ml: 1 }} onClick={toggleTheme} color="inherit">
-                        {/* Show a sun icon in dark mode, and a moon icon in light mode */}
-                        {theme === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
-                    </IconButton>
+                <Box sx={{ display: { xs: 'none', sm: 'flex' } }}>
+                    <Button component={Link} to="/tailwind">Recipes</Button>
+                    <Button component={Link} to="/mui">Calculator</Button>
+                    <Button component={Link} to="/dashboard">Dashboard</Button>
                 </Box>
+                <IconButton onClick={toggleColorMode}>
+                    {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+                </IconButton>
             </Toolbar>
         </AppBar>
-    );
-};
+    )
+}

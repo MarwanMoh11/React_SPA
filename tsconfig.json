@@ -1,7 +1,5 @@
 {
-  "files": [
-    "tailwind.config.js"
-  ],
+  "files": [],
   "references": [
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" }

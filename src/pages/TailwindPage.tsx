@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
-import { fetchRecipes, fetchRecipeImage } from '../api/recipeApi';
+import { fetchRecipes, fetchRecipeImage } from '../api/recipeApi.ts';
 import type {Recipe} from '../types/Recipe';
 import { Dialog, DialogContent, DialogTitle, IconButton, Typography, CircularProgress } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
