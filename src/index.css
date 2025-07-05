@@ -1,1 +1,12 @@
-@import "tailwindcss";
+/* src/index.css or main.css */
+
+@import "tailwindcss";                /* Loads theme, preflight, utilities */
+@custom-variant dark (&:where(.dark, .dark *)); /* Enables dark: variant based on class */
+
+/* Optional: force color scheme for light/dark root */
+:root {
+    --tw-color-scheme: light;
+}
+:root.dark {
+    --tw-color-scheme: dark;
+}

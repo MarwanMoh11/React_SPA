@@ -1,11 +1,10 @@
 import {
     Box, Button, Card, CardContent, Container, FormControl, FormControlLabel, FormLabel, Grid,
-    Radio, RadioGroup, Select, MenuItem, TextField, ToggleButton, ToggleButtonGroup, Typography, Divider, InputLabel,
-    type SelectChangeEvent
+    Radio, RadioGroup, Select, MenuItem, TextField, ToggleButton, ToggleButtonGroup, Typography,
+    Divider, InputLabel, useTheme, type SelectChangeEvent
 } from '@mui/material';
 import { useState, useCallback } from 'react';
 
-// Define types for our state
 type Gender = 'male' | 'female';
 type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'veryActive';
 type Goal = 'lose' | 'maintain' | 'gain';
@@ -18,15 +17,14 @@ interface Results {
 }
 
 export const MuiPage = () => {
-    // State for form inputs
+    const theme = useTheme();
+
     const [gender, setGender] = useState<Gender>('male');
     const [age, setAge] = useState<string>('');
-    const [weight, setWeight] = useState<string>(''); // in kg
-    const [height, setHeight] = useState<string>(''); // in cm
+    const [weight, setWeight] = useState<string>('');
+    const [height, setHeight] = useState<string>('');
     const [activityLevel, setActivityLevel] = useState<ActivityLevel>('light');
     const [goal, setGoal] = useState<Goal>('maintain');
-
-    // State for calculated results
     const [results, setResults] = useState<Results | null>(null);
 
     const handleCalculate = useCallback(() => {
@@ -39,7 +37,6 @@ export const MuiPage = () => {
             return;
         }
 
-        // 1. Calculate BMR using Mifflin-St Jeor equation
         let bmr: number;
         if (gender === 'male') {
             bmr = (10 * weightNum) + (6.25 * heightNum) - (5 * ageNum) + 5;
@@ -47,7 +44,6 @@ export const MuiPage = () => {
             bmr = (10 * weightNum) + (6.25 * heightNum) - (5 * ageNum) - 161;
         }
 
-        // 2. Adjust BMR by activity level to get TDEE
         const activityMultipliers: Record<ActivityLevel, number> = {
             sedentary: 1.2,
             light: 1.375,
@@ -57,7 +53,6 @@ export const MuiPage = () => {
         };
         const tdee = bmr * activityMultipliers[activityLevel];
 
-        // 3. Adjust TDEE based on goal
         let finalCalories: number;
         switch (goal) {
             case 'lose':
@@ -66,12 +61,10 @@ export const MuiPage = () => {
             case 'gain':
                 finalCalories = tdee + 500;
                 break;
-            case 'maintain':
             default:
                 finalCalories = tdee;
         }
 
-        // 4. Calculate macros (e.g., 40% carbs, 30% protein, 30% fat)
         const proteinGrams = Math.round((finalCalories * 0.30) / 4);
         const carbsGrams = Math.round((finalCalories * 0.40) / 4);
         const fatGrams = Math.round((finalCalories * 0.30) / 9);
@@ -85,7 +78,10 @@ export const MuiPage = () => {
     }, [age, weight, height, gender, activityLevel, goal]);
 
     return (
-        <Box sx={{ bgcolor: 'grey.50', py: 8 }}>
+        <Box sx={{
+            bgcolor: theme.palette.mode === 'dark' ? 'grey.900' : 'grey.50',
+            py: 8,
+        }}>
             <Container maxWidth="md">
                 <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
                     Daily Calorie & Macro Calculator
@@ -132,7 +128,18 @@ export const MuiPage = () => {
                                     <ToggleButton value="gain">Gain Weight</ToggleButton>
                                 </ToggleButtonGroup>
                             </FormControl>
-                            <Button variant="contained" onClick={handleCalculate} sx={{ py: 1.5, bgcolor: '#2e7d32', '&:hover': { bgcolor: '#1b5e20' } }}>
+                            <Button
+                                variant="contained"
+                                onClick={handleCalculate}
+                                sx={{
+                                    py: 1.5,
+                                    bgcolor: theme.palette.mode === 'dark' ? '#1565c0' : '#2e7d32',
+                                    color: theme.palette.mode === 'dark' ? 'white' : 'white',
+                                    '&:hover': {
+                                        bgcolor: theme.palette.mode === 'dark' ? '#0d47a1' : '#1b5e20',
+                                    }
+                                }}
+                            >
                                 Calculate
                             </Button>
                         </Box>
@@ -140,7 +147,16 @@ export const MuiPage = () => {
 
                     {/* --- Results Display --- */}
                     <Grid size={{ xs: 12, md: 6 }}>
-                        <Card variant="outlined" sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Card
+                            variant="outlined"
+                            sx={{
+                                height: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                bgcolor: theme.palette.background.paper
+                            }}
+                        >
                             {results ? (
                                 <CardContent sx={{ textAlign: 'center' }}>
                                     <Typography variant="h6" color="text.secondary">Your Daily Goal</Typography>

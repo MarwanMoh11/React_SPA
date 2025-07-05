@@ -130,7 +130,7 @@ export const DashboardPage = () => {
 
 
     return (
-        <Box sx={{ bgcolor: 'grey.100', py: 6, minHeight: 'calc(100vh - 64px)' }}>
+        <Box sx={{ py: 6, minHeight: 'calc(100vh - 64px)' }}>
             <Container maxWidth="lg">
                 <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ fontWeight: 'bold', mb: 4 }}>
                     Recipe Dashboard
@@ -164,7 +164,20 @@ export const DashboardPage = () => {
             </Container>
 
             {/* "Add Recipe" Button */}
-            <Fab color="primary" sx={{ position: 'fixed', bottom: 32, right: 32, backgroundColor: '#2e7d32', '&:hover': { bgcolor: '#1b5e20' } }} onClick={() => setCreateFormOpen(true)}>
+            <Fab
+                color="primary"
+                sx={(theme) => ({
+                    position: 'fixed',
+                    bottom: 32,
+                    right: 32,
+                    backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#2e7d32',
+                    color: theme.palette.mode === 'dark' ? '#fff' : '#fff', // force white icon
+                    '&:hover': {
+                        backgroundColor: theme.palette.mode === 'dark' ? '#444' : '#1b5e20',
+                    },
+                })}
+                onClick={() => setCreateFormOpen(true)}
+            >
                 <AddIcon />
             </Fab>
 
