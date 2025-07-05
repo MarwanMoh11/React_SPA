@@ -24,5 +24,6 @@
     "noUncheckedSideEffectImports": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": ["src"]
+  "include": ["src",
+    "tailwind.config.js"]
 }
