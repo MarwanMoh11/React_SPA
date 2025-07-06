@@ -1,3 +1,5 @@
+// src/pages/DashboardPage.tsx
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
     Alert, Box, Button, Card, CardActions, CardContent, CircularProgress, Container, Dialog, DialogActions,
@@ -153,8 +155,8 @@ export const DashboardPage = () => {
                                         </Typography>
                                     </CardContent>
                                     <CardActions sx={{ justifyContent: 'flex-end' }}>
-                                        <IconButton onClick={() => setEditingRecipe(recipe)}><EditIcon /></IconButton>
-                                        <IconButton onClick={() => setDeletingRecipeId(recipe.id)}><DeleteIcon color="error" /></IconButton>
+                                        <IconButton aria-label={`Edit ${recipe.title}`} onClick={() => setEditingRecipe(recipe)}><EditIcon /></IconButton>
+                                        <IconButton aria-label={`Delete ${recipe.title}`} onClick={() => setDeletingRecipeId(recipe.id)}><DeleteIcon color="error" /></IconButton>
                                     </CardActions>
                                 </Card>
                             </Grid>
@@ -166,12 +168,13 @@ export const DashboardPage = () => {
             {/* "Add Recipe" Button */}
             <Fab
                 color="primary"
+                aria-label="add recipe"
                 sx={(theme) => ({
                     position: 'fixed',
                     bottom: 32,
                     right: 32,
                     backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#2e7d32',
-                    color: theme.palette.mode === 'dark' ? '#fff' : '#fff', // force white icon
+                    color: '#fff',
                     '&:hover': {
                         backgroundColor: theme.palette.mode === 'dark' ? '#444' : '#1b5e20',
                     },

@@ -1,0 +1,13 @@
+// tsconfig.test.json
+{
+  // Inherit all the good settings from your app's config
+  "extends": "./tsconfig.app.json",
+
+  "compilerOptions": {
+    // THE FIX: Override this one setting for tests
+    "verbatimModuleSyntax": false
+  },
+
+  // Make sure to include your test files
+  "include": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/setupTests.ts"]
+}
