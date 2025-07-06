@@ -1,6 +1,6 @@
 // src/pages/TailwindPage.test.tsx
 
-import { render, screen, within, waitForElementToBeRemoved } from '@testing-library/react';
+import { render, screen, waitForElementToBeRemoved, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { http, HttpResponse } from 'msw';
@@ -28,17 +28,9 @@ const renderWithProviders = (ui: React.ReactElement) => {
 describe('TailwindPage', () => {
     test('renders loading state, then displays recipe cards', async () => {
         renderWithProviders(<TailwindPage />);
-
-        // ✅ FIX 1: Check that at least one progress bar exists initially.
-        // `getByRole` fails if multiple are found, so `getAllByRole` is more robust here.
         expect(screen.getAllByRole('progressbar').length).toBeGreaterThan(0);
-
-        // Wait for recipes to appear by looking for their titles
         expect(await screen.findByText(/sunt aut facere/i)).toBeInTheDocument();
         expect(await screen.findByText(/qui est esse/i)).toBeInTheDocument();
-
-        // Note: We no longer check for the progressbar to be gone, because the recipe
-        // cards themselves have their own loading spinners for images.
     });
 
     test('displays an error message if the recipes query fails', async () => {
@@ -47,11 +39,9 @@ describe('TailwindPage', () => {
                 return new HttpResponse(null, { status: 500, statusText: 'Server Error' });
             })
         );
-
         renderWithProviders(<TailwindPage />);
-
-        // ✅ FIX 2: Find the error message by its text content, since the component uses a <p> tag.
-        expect(await screen.findByText(/Error fetching recipes/i)).toBeInTheDocument();
+        const alert = await screen.findByRole('alert');
+        expect(alert).toHaveTextContent(/error fetching recipes/i);
     });
 
     test('opens and closes the recipe modal with correct content', async () => {
@@ -67,14 +57,8 @@ describe('TailwindPage', () => {
         expect(within(dialog).getByText(/sunt aut facere/i)).toBeInTheDocument();
         expect(within(dialog).getByText(/quia et suscipit/i)).toBeInTheDocument();
 
-        // ✅ FIX 3: Find the close button by looking for its icon's test ID,
-        // since the button itself has no accessible name.
-        const closeIcon = within(dialog).getByTestId('CloseIcon');
-        const closeButton = closeIcon.closest('button');
-        expect(closeButton).toBeInTheDocument();
-        await user.click(closeButton!);
+        await user.keyboard('{escape}');
 
-        // ✅ FIX 4: Use `waitForElementToBeRemoved` to correctly handle the exit animation.
         await waitForElementToBeRemoved(() => screen.queryByRole('dialog'));
     });
 });
