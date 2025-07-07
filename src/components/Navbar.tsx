@@ -46,7 +46,7 @@ export const Navbar = () => {
                     </Link>
                 </Typography>
 
-                <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 1 }}>
+                <Box sx={{ display: 'flex', gap: 1 }}>
                     <Button
                         component={Link}
                         to="/tailwind"
