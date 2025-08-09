@@ -130,8 +130,25 @@ export const TailwindPage = () => {
                 </h2>
 
                 {isLoading && (
-                    <div className="text-center mt-12">
-                        <CircularProgress data-testid="main-loader" />
+                    <div className="mt-12">
+                        <div className="text-center mb-6">
+                            <CircularProgress data-testid="main-loader" />
+                        </div>
+                        {/* Skeleton grid for better perceived performance */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                            {Array.from({ length: 8 }).map((_, idx) => (
+                                <div
+                                    key={idx}
+                                    className="rounded-xl overflow-hidden ring-1 ring-neutral-200 dark:ring-neutral-700 bg-white dark:bg-neutral-800"
+                                >
+                                    <div className="aspect-[16/9] bg-neutral-100 dark:bg-neutral-700 animate-pulse" />
+                                    <div className="p-4 space-y-2">
+                                        <div className="h-5 bg-neutral-200 dark:bg-neutral-600 rounded w-2/3 animate-pulse" />
+                                        <div className="h-4 bg-neutral-200 dark:bg-neutral-600 rounded w-full animate-pulse" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
                 {error && (
@@ -139,7 +156,20 @@ export const TailwindPage = () => {
                         Error fetching recipes: {error.message}
                     </Alert>
                 )}
-                {recipes && (
+                {recipes && recipes.length === 0 && !isLoading && !error && (
+                    <div className="text-center mt-16">
+                        <p className="text-lg text-neutral-700 dark:text-neutral-300 mb-4">
+                            No recipes yet. Get started by adding your first recipe!
+                        </p>
+                        <a
+                            href="/dashboard"
+                            className="inline-block px-5 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400"
+                        >
+                            Open Recipe Dashboard
+                        </a>
+                    </div>
+                )}
+                {recipes && recipes.length > 0 && (
                     <motion.div
                         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
                         initial="hidden"
@@ -232,10 +262,76 @@ export const TailwindPage = () => {
                         </IconButton>
 
                         <DialogContent dividers>
-                            <Typography gutterBottom variant="h6">
-                                Instructions:
-                            </Typography>
-                            <Typography variant="body1">{selectedRecipe.body}</Typography>
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <div className="lg:col-span-2 space-y-4">
+                                    <Typography variant="h6" className="font-semibold">Overview</Typography>
+                                    <div className="flex flex-wrap gap-2">
+                                        {selectedRecipe.servings ? (
+                                            <span className="px-3 py-1 rounded-full text-sm bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Servings: {selectedRecipe.servings}</span>
+                                        ) : null}
+                                        {selectedRecipe.prepTime ? (
+                                            <span className="px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">Prep: {selectedRecipe.prepTime}m</span>
+                                        ) : null}
+                                        {selectedRecipe.cookTime ? (
+                                            <span className="px-3 py-1 rounded-full text-sm bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">Cook: {selectedRecipe.cookTime}m</span>
+                                        ) : null}
+                                        {selectedRecipe.difficulty ? (
+                                            <span className="px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">{selectedRecipe.difficulty}</span>
+                                        ) : null}
+                                    </div>
+
+                                    {selectedRecipe.ingredients && selectedRecipe.ingredients.length > 0 && (
+                                        <div className="mt-4">
+                                            <Typography variant="h6" className="font-semibold">Ingredients</Typography>
+                                            <ul className="list-disc pl-6 mt-2 space-y-1 text-sm">
+                                                {selectedRecipe.ingredients.map((ing, idx) => (
+                                                    <li key={idx}>{ing}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+
+                                    <div className="mt-4">
+                                        <Typography variant="h6" className="font-semibold">Instructions</Typography>
+                                        <Typography variant="body1" className="whitespace-pre-wrap mt-2">
+                                            {selectedRecipe.instructions || selectedRecipe.body}
+                                        </Typography>
+                                    </div>
+                                </div>
+
+                                <div className="lg:col-span-1">
+                                    <div className="rounded-xl ring-1 ring-neutral-200 dark:ring-neutral-700 p-4">
+                                        <Typography variant="h6" className="font-semibold">Nutrition</Typography>
+                                        {selectedRecipe.nutrition ? (
+                                            <div className="grid grid-cols-2 gap-3 mt-3 text-sm">
+                                                <div className="rounded-lg bg-neutral-100 dark:bg-neutral-800 p-3">
+                                                    <div className="text-neutral-500 dark:text-neutral-400">Calories</div>
+                                                    <div className="text-neutral-900 dark:text-neutral-100 font-semibold">{selectedRecipe.nutrition.calories ?? '—'} kcal</div>
+                                                </div>
+                                                <div className="rounded-lg bg-neutral-100 dark:bg-neutral-800 p-3">
+                                                    <div className="text-neutral-500 dark:text-neutral-400">Protein</div>
+                                                    <div className="text-neutral-900 dark:text-neutral-100 font-semibold">{selectedRecipe.nutrition.protein ?? '—'} g</div>
+                                                </div>
+                                                <div className="rounded-lg bg-neutral-100 dark:bg-neutral-800 p-3">
+                                                    <div className="text-neutral-500 dark:text-neutral-400">Carbs</div>
+                                                    <div className="text-neutral-900 dark:text-neutral-100 font-semibold">{selectedRecipe.nutrition.carbs ?? '—'} g</div>
+                                                </div>
+                                                <div className="rounded-lg bg-neutral-100 dark:bg-neutral-800 p-3">
+                                                    <div className="text-neutral-500 dark:text-neutral-400">Fat</div>
+                                                    <div className="text-neutral-900 dark:text-neutral-100 font-semibold">{selectedRecipe.nutrition.fat ?? '—'} g</div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <Typography variant="body2" className="text-neutral-500 dark:text-neutral-400 mt-2">No nutrition info yet.</Typography>
+                                        )}
+
+                                        <div className="mt-4">
+                                            <Typography variant="body2" className="text-neutral-500 dark:text-neutral-400">Details</Typography>
+                                            <Typography variant="body2" className="text-neutral-700 dark:text-neutral-200">{selectedRecipe.body}</Typography>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </DialogContent>
                     </Dialog>
                 )}

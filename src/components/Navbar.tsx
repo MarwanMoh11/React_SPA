@@ -15,8 +15,28 @@ import FastfoodIcon from '@mui/icons-material/Fastfood';
 import MenuIcon from '@mui/icons-material/Menu';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ThemeContext } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
+
+const AuthActions = () => {
+    const { user, signOut } = useAuth();
+    const navigate = useNavigate();
+    if (!user) {
+        return (
+            <Button variant="outlined" size="small" component={Link} to="/login">Login</Button>
+        );
+    }
+    return (
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            <Typography variant="body2" sx={{ display: { xs: 'none', md: 'block' } }}>
+                {user.displayName || user.email}
+            </Typography>
+            <Button size="small" component={Link} to="/settings">Settings</Button>
+            <Button size="small" color="error" onClick={async () => { await signOut(); navigate('/'); }}>Logout</Button>
+        </Box>
+    );
+};
 
 export const Navbar = () => {
     const theme = useTheme();
@@ -94,11 +114,14 @@ export const Navbar = () => {
                     ))}
                 </Box>
 
-                <Tooltip title="Toggle light/dark theme">
-                    <IconButton onClick={toggleColorMode} sx={{ ml: 1 }}>
-                        {mode === 'dark' ? <Brightness7Icon htmlColor="#fff" /> : <Brightness4Icon htmlColor="#000" />}
-                    </IconButton>
-                </Tooltip>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Tooltip title="Toggle light/dark theme">
+                        <IconButton onClick={toggleColorMode}>
+                            {mode === 'dark' ? <Brightness7Icon htmlColor="#fff" /> : <Brightness4Icon htmlColor="#000" />}
+                        </IconButton>
+                    </Tooltip>
+                    <AuthActions />
+                </Box>
             </Toolbar>
         </AppBar>
     );

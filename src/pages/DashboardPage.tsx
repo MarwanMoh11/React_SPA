@@ -3,61 +3,39 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
     Alert, Box, Button, Card, CardActions, CardContent, CircularProgress, Container, Dialog, DialogActions,
-    DialogContent, DialogTitle, Fab, Grid, IconButton, Snackbar, TextField, Typography
+    DialogContent, DialogTitle, Fab, Grid, IconButton, Snackbar, TextField, Typography, Stepper, Step, StepLabel,
+    LinearProgress, Chip, Stack, MenuItem
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useState } from 'react';
 
-// Define the Recipe type
-interface Recipe {
-    userId: number;
-    id: number;
-    title: string;
-    body: string;
-}
+// Use shared Recipe type
+import type { Recipe } from '../types/Recipe';
 
 // --- API Functions ---
-const API_URL = 'https://jsonplaceholder.typicode.com/posts';
+// Use the shared service (Firestore in app, JSONPlaceholder in tests)
+import { fetchRecipes as fetchRecipesService, createRecipe as createRecipeService, updateRecipe as updateRecipeService, deleteRecipe as deleteRecipeService } from '../services/recipesService';
 
 // READ all recipes
 const fetchRecipes = async (): Promise<Recipe[]> => {
-    const response = await fetch(API_URL);
-    if (!response.ok) throw new Error('Network response was not ok');
-    const data = await response.json();
-    return data.slice(0, 12);
+    return fetchRecipesService();
 };
 
 // CREATE a new recipe
 const createRecipe = async (newRecipe: Omit<Recipe, 'id' | 'userId'>): Promise<Recipe> => {
-    const response = await fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify({ ...newRecipe, userId: 1 }),
-        headers: { 'Content-type': 'application/json; charset=UTF-8' },
-    });
-    if (!response.ok) throw new Error('Failed to create recipe');
-    return response.json();
+    return createRecipeService(newRecipe);
 };
 
 // UPDATE an existing recipe
 const updateRecipe = async (updatedRecipe: Recipe): Promise<Recipe> => {
-    const response = await fetch(`${API_URL}/${updatedRecipe.id}`, {
-        method: 'PUT',
-        body: JSON.stringify(updatedRecipe),
-        headers: { 'Content-type': 'application/json; charset=UTF-8' },
-    });
-    if (!response.ok) throw new Error('Failed to update recipe');
-    return response.json();
+    return updateRecipeService(updatedRecipe);
 };
 
 // DELETE a recipe
 const deleteRecipe = async (recipeId: number): Promise<object> => {
-    const response = await fetch(`${API_URL}/${recipeId}`, {
-        method: 'DELETE',
-    });
-    if (!response.ok) throw new Error('Failed to delete recipe');
-    return {};
+    return deleteRecipeService(recipeId);
 };
 
 
@@ -67,6 +45,86 @@ export const DashboardPage = () => {
     const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
     const [deletingRecipeId, setDeletingRecipeId] = useState<number | null>(null);
     const [notification, setNotification] = useState<string | null>(null);
+
+    // --- Create Wizard State ---
+    const [activeStep, setActiveStep] = useState(0);
+    const [title, setTitle] = useState('');
+    const [servings, setServings] = useState<number | ''>('');
+    const [prepTime, setPrepTime] = useState<number | ''>('');
+    const [cookTime, setCookTime] = useState<number | ''>('');
+    const [difficulty, setDifficulty] = useState<'Easy' | 'Medium' | 'Hard' | ''>('');
+    const [ingredientInput, setIngredientInput] = useState('');
+    const [ingredients, setIngredients] = useState<string[]>([]);
+    const [instructions, setInstructions] = useState('');
+    // Nutrition per serving
+    const [calories, setCalories] = useState<number | ''>('');
+    const [protein, setProtein] = useState<number | ''>('');
+    const [carbs, setCarbs] = useState<number | ''>('');
+    const [fat, setFat] = useState<number | ''>('');
+
+    const resetWizard = () => {
+        setActiveStep(0);
+        setTitle('');
+        setServings('');
+        setPrepTime('');
+        setCookTime('');
+        setDifficulty('');
+        setIngredientInput('');
+        setIngredients([]);
+        setInstructions('');
+        setCalories('');
+        setProtein('');
+        setCarbs('');
+        setFat('');
+    };
+
+    const canProceed = () => {
+        if (activeStep === 0) return title.trim().length > 2;
+        if (activeStep === 1) return Boolean(servings) && Boolean(prepTime) && Boolean(cookTime) && Boolean(difficulty);
+        if (activeStep === 2) return Boolean(calories !== '' && protein !== '' && carbs !== '' && fat !== '');
+        if (activeStep === 3) return ingredients.length > 0;
+        if (activeStep === 4) return instructions.trim().length > 10;
+        return true;
+    };
+
+    const handleAddIngredient = () => {
+        const v = ingredientInput.trim();
+        if (!v) return;
+        setIngredients((prev) => [...prev, v]);
+        setIngredientInput('');
+    };
+
+    const composeBody = () => {
+        const parts: string[] = [];
+        parts.push(`Details`);
+        parts.push(`Servings: ${servings} | Prep: ${prepTime} min | Cook: ${cookTime} min | Difficulty: ${difficulty}`);
+        parts.push('');
+        parts.push('Ingredients');
+        parts.push(...ingredients.map((ing) => `- ${ing}`));
+        parts.push('');
+        parts.push('Instructions');
+        parts.push(instructions);
+        return parts.join('\n');
+    };
+
+    const handleCreateWizardSubmit = () => {
+        createMutation.mutate({
+            title: title.trim(),
+            body: composeBody(),
+            servings: typeof servings === 'number' ? servings : undefined,
+            prepTime: typeof prepTime === 'number' ? prepTime : undefined,
+            cookTime: typeof cookTime === 'number' ? cookTime : undefined,
+            difficulty: difficulty || undefined,
+            ingredients,
+            instructions,
+            nutrition: {
+                calories: typeof calories === 'number' ? calories : undefined,
+                protein: typeof protein === 'number' ? protein : undefined,
+                carbs: typeof carbs === 'number' ? carbs : undefined,
+                fat: typeof fat === 'number' ? fat : undefined,
+            },
+        });
+    };
 
     // --- QUERIES ---
     const { data: recipes, error, isLoading } = useQuery<Recipe[], Error>({
@@ -107,11 +165,6 @@ export const DashboardPage = () => {
     });
 
     // --- Handlers ---
-    const handleCreateSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        const formData = new FormData(event.currentTarget);
-        createMutation.mutate({ title: formData.get('title') as string, body: formData.get('body') as string });
-    };
 
     const handleUpdateSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -179,18 +232,164 @@ export const DashboardPage = () => {
                         backgroundColor: theme.palette.mode === 'dark' ? '#444' : '#1b5e20',
                     },
                 })}
-                onClick={() => setCreateFormOpen(true)}
+                onClick={() => { resetWizard(); setCreateFormOpen(true); }}
             >
                 <AddIcon />
             </Fab>
 
-            {/* Create Dialog */}
-            <Dialog open={isCreateFormOpen} onClose={() => setCreateFormOpen(false)}>
-                <DialogTitle>Add a New Recipe</DialogTitle>
-                <Box component="form" onSubmit={handleCreateSubmit}>
-                    <DialogContent><TextField autoFocus required margin="dense" name="title" label="Recipe Title" type="text" fullWidth variant="standard" /><TextField required margin="dense" name="body" label="Instructions" type="text" fullWidth multiline rows={4} variant="standard" /></DialogContent>
-                    <DialogActions><Button onClick={() => setCreateFormOpen(false)}>Cancel</Button><Button type="submit" disabled={createMutation.isPending}>{createMutation.isPending ? 'Saving...' : 'Save'}</Button></DialogActions>
-                </Box>
+            {/* Create Wizard Dialog */}
+            <Dialog open={isCreateFormOpen} onClose={() => { setCreateFormOpen(false); resetWizard(); }} fullWidth maxWidth="sm">
+                <DialogTitle>Recipe Setup Wizard</DialogTitle>
+                <DialogContent dividers>
+                    <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 3 }}>
+                        {['Basics', 'Details', 'Nutrition', 'Ingredients', 'Instructions', 'Review'].map((label) => (
+                            <Step key={label}>
+                                <StepLabel>{label}</StepLabel>
+                            </Step>
+                        ))}
+                    </Stepper>
+
+                    {/* Step Content */}
+                    {activeStep === 0 && (
+                        <Box sx={{ display: 'grid', gap: 2 }}>
+                            <TextField
+                                label="Recipe Title"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                autoFocus
+                                required
+                                fullWidth
+                            />
+                        </Box>
+                    )}
+
+                    {activeStep === 1 && (
+                        <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
+                            <TextField
+                                label="Servings"
+                                type="number"
+                                value={servings}
+                                onChange={(e) => setServings(e.target.value === '' ? '' : Number(e.target.value))}
+                                required
+                            />
+                            <TextField
+                                label="Prep Time (min)"
+                                type="number"
+                                value={prepTime}
+                                onChange={(e) => setPrepTime(e.target.value === '' ? '' : Number(e.target.value))}
+                                required
+                            />
+                            <TextField
+                                label="Cook Time (min)"
+                                type="number"
+                                value={cookTime}
+                                onChange={(e) => setCookTime(e.target.value === '' ? '' : Number(e.target.value))}
+                                required
+                            />
+                            <TextField
+                                label="Difficulty"
+                                select
+                                value={difficulty}
+                                onChange={(e) => setDifficulty(e.target.value as 'Easy' | 'Medium' | 'Hard' | '')}
+                                required
+                            >
+                                <MenuItem value={'Easy'}>Easy</MenuItem>
+                                <MenuItem value={'Medium'}>Medium</MenuItem>
+                                <MenuItem value={'Hard'}>Hard</MenuItem>
+                            </TextField>
+                        </Box>
+                    )}
+
+                    {activeStep === 2 && (
+                        <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
+                            <TextField label="Calories (per serving)" type="number" value={calories} onChange={(e) => setCalories(e.target.value === '' ? '' : Number(e.target.value))} required />
+                            <TextField label="Protein (g)" type="number" value={protein} onChange={(e) => setProtein(e.target.value === '' ? '' : Number(e.target.value))} required />
+                            <TextField label="Carbs (g)" type="number" value={carbs} onChange={(e) => setCarbs(e.target.value === '' ? '' : Number(e.target.value))} required />
+                            <TextField label="Fat (g)" type="number" value={fat} onChange={(e) => setFat(e.target.value === '' ? '' : Number(e.target.value))} required />
+                        </Box>
+                    )}
+
+                    {activeStep === 3 && (
+                        <Box>
+                            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                                <TextField
+                                    fullWidth
+                                    label="Add Ingredient"
+                                    value={ingredientInput}
+                                    onChange={(e) => setIngredientInput(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddIngredient(); } }}
+                                />
+                                <Button variant="contained" onClick={handleAddIngredient} disabled={!ingredientInput.trim()}>
+                                    Add
+                                </Button>
+                            </Box>
+                            {ingredients.length > 0 ? (
+                                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                                    {ingredients.map((ing, idx) => (
+                                        <Chip
+                                            key={idx}
+                                            label={ing}
+                                            onDelete={() => setIngredients((prev) => prev.filter((_, i) => i !== idx))}
+                                        />
+                                    ))}
+                                </Stack>
+                            ) : (
+                                <Typography variant="body2" color="text.secondary">No ingredients added yet.</Typography>
+                            )}
+                        </Box>
+                    )}
+
+                    {activeStep === 4 && (
+                        <Box>
+                            <TextField
+                                label="Instructions"
+                                value={instructions}
+                                onChange={(e) => setInstructions(e.target.value)}
+                                multiline
+                                minRows={6}
+                                fullWidth
+                                required
+                            />
+                        </Box>
+                    )}
+
+                    {activeStep === 5 && (
+                        <Box sx={{ display: 'grid', gap: 1 }}>
+                            <Typography variant="subtitle1"><strong>Title:</strong> {title}</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Servings: {servings} | Prep: {prepTime} min | Cook: {cookTime} min | Difficulty: {difficulty}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Nutrition (per serving): {calories || 0} kcal • {protein || 0}g P • {carbs || 0}g C • {fat || 0}g F
+                            </Typography>
+                            <Typography variant="subtitle2" sx={{ mt: 1 }}>Ingredients</Typography>
+                            <ul style={{ paddingLeft: 18, marginTop: 4 }}>
+                                {ingredients.map((ing, idx) => (<li key={idx}>{ing}</li>))}
+                            </ul>
+                            <Typography variant="subtitle2" sx={{ mt: 1 }}>Instructions</Typography>
+                            <Typography variant="body2" whiteSpace="pre-wrap">{instructions}</Typography>
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => { setCreateFormOpen(false); }} disabled={createMutation.isPending}>Cancel</Button>
+                    {activeStep > 0 && (
+                        <Button onClick={() => setActiveStep((s) => s - 1)} disabled={createMutation.isPending}>
+                            Back
+                        </Button>
+                    )}
+                    {activeStep < 5 && (
+                        <Button onClick={() => setActiveStep((s) => s + 1)} disabled={!canProceed() || createMutation.isPending}>
+                            Next
+                        </Button>
+                    )}
+                    {activeStep === 5 && (
+                        <Button onClick={handleCreateWizardSubmit} variant="contained" disabled={createMutation.isPending}>
+                            {createMutation.isPending ? 'Creating...' : 'Create Recipe'}
+                        </Button>
+                    )}
+                </DialogActions>
+                {createMutation.isPending && <LinearProgress />}
             </Dialog>
 
             {/* Edit Dialog */}
