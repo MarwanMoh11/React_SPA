@@ -6,17 +6,63 @@ import { getAnalytics, isSupported, type Analytics } from 'firebase/analytics';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getAuth, type Auth } from 'firebase/auth';
 
-// NOTE: For production security, consider moving these to Vite env vars (VITE_FIREBASE_*)
-// and not committing them. Keeping inline as requested to make the app fully functional now.
-const firebaseConfig = {
-  apiKey: 'AIzaSyA2nxJ5ryTehwy7NL5exOIgwzkggEn4NHc',
-  authDomain: 'everythingapp-92526.firebaseapp.com',
-  projectId: 'everythingapp-92526',
-  storageBucket: 'everythingapp-92526.firebasestorage.app',
-  messagingSenderId: '365721620352',
-  appId: '1:365721620352:web:f02fbac61f18638c587b65',
-  measurementId: 'G-9M0X18C23E',
+// Read Firebase config from Vite environment variables. Never commit secrets.
+// In test environment, allow dummy placeholders to avoid failing tests that import auth context.
+const isTest = typeof process !== 'undefined' && (process as any)?.env?.NODE_ENV === 'test';
+
+const envConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY as string | undefined,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string | undefined,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID as string | undefined,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET as string | undefined,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID as string | undefined,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID as string | undefined,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID as string | undefined,
 };
+
+const dummyTestConfig = {
+  apiKey: 'test-api-key',
+  authDomain: 'test-app.firebaseapp.com',
+  projectId: 'test-project',
+  storageBucket: 'test-project.appspot.com',
+  messagingSenderId: '000000000000',
+  appId: '1:000000000000:web:0000000000000000000000',
+  measurementId: 'G-TEST000000',
+};
+
+function resolveFirebaseConfig() {
+  const cfg = isTest ? { ...dummyTestConfig, ...envConfig } : envConfig;
+  // In non-test env, ensure required fields exist
+  const requiredKeys: (keyof typeof cfg)[] = [
+    'apiKey',
+    'authDomain',
+    'projectId',
+    'storageBucket',
+    'messagingSenderId',
+    'appId',
+  ];
+  if (!isTest) {
+    const missing = requiredKeys.filter((k) => !cfg[k]);
+    if (missing.length) {
+      throw new Error(
+        `Missing Firebase environment variables: ${missing
+          .map((k) => `VITE_FIREBASE_${k.toUpperCase()}`)
+          .join(', ')}. Please create a .env file (see .env.example).`
+      );
+    }
+  }
+  return cfg as {
+    apiKey: string;
+    authDomain: string;
+    projectId: string;
+    storageBucket: string;
+    messagingSenderId: string;
+    appId: string;
+    measurementId?: string;
+  };
+}
+
+const firebaseConfig = resolveFirebaseConfig();
 
 let app: FirebaseApp | null = null;
 let db: Firestore | null = null;

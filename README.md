@@ -19,6 +19,17 @@ You will need the following software installed on your machine:
 * [Node.js](https://nodejs.org/en/) (v18 or later is recommended)
 * [npm](https://www.npmjs.com/) (which comes with Node.js) or [yarn](https://yarnpkg.com/)
 
+### Environment variables
+
+This project uses Vite. Sensitive configuration (Firebase) must be provided via a `.env` file at the project root. Do not commit your `.env`.
+
+1. Copy the example file and fill in your values:
+   ```bash
+   cp .env.example .env
+   # then edit .env to set VITE_FIREBASE_* values
+   ```
+2. For tests (Jest), dummy values are used automatically if `.env` is not present, so tests can run without real credentials.
+
 ### Installation & Running Locally
 
 1.  **Clone the repository:**
