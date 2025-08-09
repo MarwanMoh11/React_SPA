@@ -1,12 +1,14 @@
 // src/pages/TailwindPage.test.tsx
 
-import { render, screen, waitForElementToBeRemoved, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { http, HttpResponse } from 'msw';
 import { TailwindPage } from './TailwindPage';
 import { server } from '../mocks/server';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import RecipeDetailsPage from './RecipeDetailsPage';
 
 // --- Helper Functions ---
 const createTestQueryClient = () => new QueryClient({
@@ -19,6 +21,23 @@ const renderWithProviders = (ui: React.ReactElement) => {
     render(
         <QueryClientProvider client={testQueryClient}>
             <ThemeProvider theme={theme}>{ui}</ThemeProvider>
+        </QueryClientProvider>
+    );
+};
+
+const renderWithRouter = () => {
+    const testQueryClient = createTestQueryClient();
+    const theme = createTheme({ palette: { mode: 'light' } });
+    render(
+        <QueryClientProvider client={testQueryClient}>
+            <ThemeProvider theme={theme}>
+                <MemoryRouter initialEntries={["/"]}>
+                    <Routes>
+                        <Route path="/" element={<TailwindPage />} />
+                        <Route path="/recipes/:id" element={<RecipeDetailsPage />} />
+                    </Routes>
+                </MemoryRouter>
+            </ThemeProvider>
         </QueryClientProvider>
     );
 };
@@ -44,21 +63,15 @@ describe('TailwindPage', () => {
         expect(alert).toHaveTextContent(/error fetching recipes/i);
     });
 
-    test('opens and closes the recipe modal with correct content', async () => {
-        renderWithProviders(<TailwindPage />);
+    test('navigates to recipe details page with correct content', async () => {
+        renderWithRouter();
         const user = userEvent.setup();
 
         const firstCard = await screen.findByText(/sunt aut facere/i);
         await user.click(firstCard);
 
-        const dialog = await screen.findByRole('dialog');
-        expect(dialog).toBeInTheDocument();
-
-        expect(within(dialog).getByText(/sunt aut facere/i)).toBeInTheDocument();
-        expect(within(dialog).getByText(/quia et suscipit/i)).toBeInTheDocument();
-
-        await user.keyboard('{escape}');
-
-        await waitForElementToBeRemoved(() => screen.queryByRole('dialog'));
+        // On the details page, title and body should be visible
+        expect(await screen.findByText(/sunt aut facere/i)).toBeInTheDocument();
+        expect(await screen.findByText(/quia et suscipit/i)).toBeInTheDocument();
     });
 });

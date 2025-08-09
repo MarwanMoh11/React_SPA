@@ -8,6 +8,7 @@ import { AppThemeProvider } from './contexts/ThemeProvider'; // ✅ Correct impo
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoginPage from './pages/LoginPage';
 import SettingsPage from './pages/SettingsPage';
+import RecipeDetailsPage from './pages/RecipeDetailsPage';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
     const { user, loading } = useAuth();
@@ -29,6 +30,7 @@ export default function App() {
                             <Route path="login" element={<LoginPage />} />
                             <Route path="settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
                             <Route path="dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
+                            <Route path="recipes/:id" element={<RecipeDetailsPage />} />
                         </Route>
                     </Routes>
                 </AuthProvider>
