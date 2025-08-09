@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect, useRef, forwardRef } from 'react';
-import { motion, AnimatePresence, type Variants } from 'framer-motion';
+import { motion, AnimatePresence, type Variants, useScroll, useTransform } from 'framer-motion';
 import {
     Dialog,
     DialogContent,
@@ -108,6 +108,9 @@ const RecipeCard = ({ recipe, onClick }: { recipe: Recipe; onClick: () => void }
 export const TailwindPage = () => {
     const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
     const theme = useTheme();
+    const contentRef = useRef<HTMLDivElement | null>(null);
+    const { scrollYProgress } = useScroll({ container: contentRef });
+    const imageOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
     const { data: recipes, error, isLoading } = useQuery<Recipe[], Error>({
         queryKey: ['recipes'],
         queryFn: fetchRecipes,
@@ -233,11 +236,11 @@ export const TailwindPage = () => {
                             ),
                         }}
                     >
-                        <motion.div layoutId={`image-${selectedRecipe.id}`}>
+                        <motion.div layoutId={`image-${selectedRecipe.id}`} style={{ opacity: imageOpacity }}>
                             <img
                                 src={imageCache.get(selectedRecipe.title) || ''}
                                 alt={selectedRecipe.title}
-                                className="w-full h-auto max-h-[400px] object-cover"
+                                className="w-full h-auto max-h-[50vh] sm:max-h-[400px] object-cover"
                             />
                         </motion.div>
 
@@ -261,7 +264,7 @@ export const TailwindPage = () => {
                             <CloseIcon fontSize="medium" />
                         </IconButton>
 
-                        <DialogContent dividers>
+                        <DialogContent dividers ref={contentRef} sx={{ maxHeight: { xs: '80vh', sm: '70vh' } }}>
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <div className="lg:col-span-2 space-y-4">
                                     <Typography variant="h6" className="font-semibold">Overview</Typography>

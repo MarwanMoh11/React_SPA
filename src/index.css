@@ -10,3 +10,8 @@
 :root.dark {
     --tw-color-scheme: dark;
 }
+
+/* Slightly increase base font size on small screens for better readability */
+@media (max-width: 640px) {
+  html { font-size: 17px; }
+}
